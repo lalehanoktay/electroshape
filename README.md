@@ -16,7 +16,7 @@ In **2011**, the method was further improved by incorporating atomic lipophilici
 To install the package, clone the repository and install the dependencies:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/lalehanoktay/electroshape.git
 cd electroshape
 pip install -r requirements.txt
 pip install .
