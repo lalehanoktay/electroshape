@@ -7,7 +7,7 @@ import logging
 
 logging.basicConfig(
     filename='skipped_molecules.log',
-    filemode='a', .
+    filemode='a', 
     format='%(asctime)s - %(levelname)s - %(message)s',
     level=logging.ERROR
 )
