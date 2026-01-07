@@ -44,7 +44,7 @@ def electroshape_vector_5d(mol: Chem.Mol) -> np.ndarray:
 
 
     try:
-        contribs = Crippen.RdMolDescriptors._CalcCrippenContribs(mol)
+        contribs = AllChem.CalcCrippenContribs(mol)
         
        
         if len(contribs) != N:
