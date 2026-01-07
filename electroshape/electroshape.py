@@ -1,6 +1,6 @@
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import AllChem, Crippen
+from rdkit.Chem import AllChem, Crippen, rdMolDescriptors
 from typing import List, Optional, Tuple
 import logging
 
@@ -44,7 +44,7 @@ def electroshape_vector_5d(mol: Chem.Mol) -> np.ndarray:
 
 
     try:
-        contribs = AllChem.CalcCrippenContribs(mol)
+        contribs = rdMolDescriptors._CalcCrippenContribs(mol)
         
        
         if len(contribs) != N:
