@@ -2,6 +2,15 @@ import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem, Crippen
 from typing import List, Optional, Tuple
+import logging
+
+
+logging.basicConfig(
+    filename='skipped_molecules.log',
+    filemode='a', .
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.ERROR
+)
 
 def _moments(dists: np.ndarray) -> List[float]:
     """Calculate mean, std_dev, and cube root of 3rd central moment."""
@@ -33,11 +42,20 @@ def electroshape_vector_5d(mol: Chem.Mol) -> np.ndarray:
         for i in range(N)
     ])
 
+
     try:
         contribs = Crippen.RdMolDescriptors._CalcCrippenContribs(mol)
+        
+       
+        if len(contribs) != N:
+            raise ValueError(f"LogP atom count mismatch. Expected {N}, got {len(contribs)}.")
+            
         logp_values = np.array([x[0] for x in contribs])
-    except:
-        logp_values = np.zeros(N)
+        
+    except Exception as e:
+        
+        raise ValueError(f"LogP Calculation Failed: {str(e)}")
+
     
     # Build 5D Coordinates
     coords_5d = np.zeros((N, 5))
@@ -115,6 +133,7 @@ def process_record(task: Tuple[str, str]) -> Optional[dict]:
     try:
         mol = Chem.MolFromMolBlock(molblock, removeHs=False)
         if mol is None: 
+            logging.error(f"MOLECULE_INVALID | ID: {unique_id} | Could not parse MolBlock")
             return None
             
         try:
@@ -125,9 +144,18 @@ def process_record(task: Tuple[str, str]) -> Optional[dict]:
             else:
                 raise ValueError("MMFF partial charge calculation failed for molecule.")
         except Exception as e:
-            raise ValueError(f"MMFF partial charge calculation failed for molecule {unique_id}: {e}")
 
-        vec = electroshape_vector_5d(mol)
+            logging.error(f"CHARGE_FAIL | ID: {unique_id} | REASON: {e}")
+            return None
+
+
+        try:
+            vec = electroshape_vector_5d(mol)
+        except ValueError as ve:
+
+            logging.error(f"DESCRIPTOR_FAIL | ID: {unique_id} | REASON: {ve}")
+            return None
+
         smiles = Chem.MolToSmiles(Chem.RemoveHs(Chem.Mol(mol)), canonical=True)
         
         return {
@@ -137,5 +165,7 @@ def process_record(task: Tuple[str, str]) -> Optional[dict]:
             "charge_source": "mmff",
             "vector": vec.tolist()
         }
-    except Exception:
+    except Exception as e:
+
+        logging.error(f"UNEXPECTED_FAIL | ID: {unique_id} | REASON: {e}")
         return None
